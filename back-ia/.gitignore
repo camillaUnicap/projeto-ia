@@ -1,0 +1,14 @@
+# Arquivos e diretórios a serem ignorados pelo Git
+
+# Ambiente virtual
+venv/
+env/
+
+# Bibliotecas Python instaladas via pip
+lib/
+Lib/
+libs/
+Libs/
+*.egg-info/
+dist/
+build/
