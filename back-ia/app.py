@@ -19,8 +19,7 @@ with open('vectorizer (3).pkl', 'rb') as file:
     vectorizer = pickle.load(file)
 
 # Definir as categorias desejadas
-categories = ['comp.graphics', 'comp.os.ms-windows.misc', 'comp.sys.ibm.pc.hardware',
-              'comp.sys.mac.hardware']
+categories = ['comp.graphics', 'comp.os.ms-windows.misc', 'comp.sys.ibm.pc.hardware','comp.sys.mac.hardware']
 
 # Carregar o conjunto de dados 20 Newsgroups completo
 full_data = fetch_20newsgroups(subset='all', categories=categories, shuffle=True, random_state=42)
@@ -35,7 +34,7 @@ labels_full = full_data.target
 def calculate_category_accuracy():
     category_accuracy = {}
     for category in categories:
-        category_indices = np.where(labels_full == categories.index(category))[0]
+        category_indices = np.where(labels_full == categories.index(category) - categories.index(categories[0]))[0]
         category_predictions = model.predict(X_full[category_indices])
         accuracy = accuracy_score(labels_full[category_indices], category_predictions)
         category_accuracy[category] = accuracy
@@ -46,24 +45,28 @@ def predict():
     text = request.json['text']
 
     if not text:
-         return jsonify({'error': 'Input is empty'})
-    
+        return jsonify({'error': 'Input is empty'})
+
     # Vetorizar o texto de entrada
     text_vectorized = vectorizer.transform([text])
 
     # Fazer a predição
     predicted_label = model.predict(text_vectorized)[0]
-    predicted_category = categories[predicted_label]
-
-    # Calcular a precisão para cada categoria
-    category_accuracy = calculate_category_accuracy()
+    
+    if predicted_label < len(categories):
+        predicted_category = categories[predicted_label]
+        category_accuracy = calculate_category_accuracy()[predicted_category]
+    else:
+        predicted_category = 'Categoria Desconhecida'
+        category_accuracy = None
 
     result = {
         'predicted_category': predicted_category,
-        'category_accuracy': category_accuracy[predicted_category]
+        'category_accuracy': category_accuracy
     }
 
     return jsonify(result)
+
 
 if __name__ == '__main__':
     app.run()
