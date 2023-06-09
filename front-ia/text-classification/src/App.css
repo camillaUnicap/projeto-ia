@@ -22,14 +22,16 @@
   align-items: center;
   background-color: #fff;
   width: 500px;
-  height: 150px;
+  height: 170px;
   border: 1px solid #ccc;
   border-radius: 4px;
 }
 
 .form-group {
-  margin-bottom: 10px;
-  padding-top: 30px;
+  margin-bottom: 15px;
+  padding-top: 20px;
+  display: flex;
+  align-items: center;
 }
 
 .label {
@@ -87,5 +89,25 @@
   font-size: 18px;
   font-weight: bold;
   color: #333;
+  width: 470px;
+  padding-left: 10px;
 }
 
+.legend h3 {
+  margin-left: 18px;
+  font-size: 16px;
+  margin-bottom: 5px;
+  font-family: Arial, sans-serif;
+  width: 500px;
+}
+
+.legend li {
+  margin-bottom: 5px;
+  font-size: 14px;
+  font-family: Arial, sans-serif;
+}
+
+.legend li strong, .legend li span {
+  font-size: 14px;
+  font-family: Arial, sans-serif;
+}

@@ -1,37 +1,70 @@
-from flask import Flask, jsonify, request
 from flask import Flask, request, jsonify
-import tensorflow as tf
-import pickle
+from sklearn.datasets import fetch_20newsgroups
 from sklearn.feature_extraction.text import TfidfVectorizer
+from sklearn.linear_model import LogisticRegression
+from sklearn.metrics import accuracy_score
+import numpy as np
+import pickle
 from flask_cors import CORS
 
 app = Flask(__name__)
 CORS(app, origins='http://localhost:3000')
 
-target_names = ['comp.graphics', 'comp.os.ms-windows.misc', 'comp.sys.ibm.pc.hardware', 'comp.sys.mac.hardware', 'comp.windows.x', 'sci.electronics']
+# Carregar o modelo treinado
+with open('model (1).pkl', 'rb') as file:
+    model = pickle.load(file)
 
-# Carregando o modelo treinado
-with open('model.pkl', 'rb') as f:
-    model = pickle.load(f)
+# Carregar o objeto de vetorização
+with open('vectorizer (3).pkl', 'rb') as file:
+    vectorizer = pickle.load(file)
 
-with open('vectorizer.pkl', 'rb') as f:
-    vectorizer = pickle.load(f)
+# Definir as categorias desejadas
+categories = ['comp.graphics', 'comp.os.ms-windows.misc', 'comp.sys.ibm.pc.hardware',
+              'comp.sys.mac.hardware']
 
-@app.route('/')
-def home():
-    return "Welcome to the Predicted Class!"
+# Carregar o conjunto de dados 20 Newsgroups completo
+full_data = fetch_20newsgroups(subset='all', categories=categories, shuffle=True, random_state=42)
 
-# Definindo rota para a API
+# Vetorizar os dados de texto usando o objeto de vetorização carregado
+X_full = vectorizer.transform(full_data.data)
+
+# Converter as categorias em rótulos numéricos
+labels_full = full_data.target
+
+# Função para calcular a precisão para cada categoria
+def calculate_category_accuracy():
+    category_accuracy = {}
+    for category in categories:
+        category_indices = np.where(labels_full == categories.index(category))[0]
+        category_predictions = model.predict(X_full[category_indices])
+        accuracy = accuracy_score(labels_full[category_indices], category_predictions)
+        category_accuracy[category] = accuracy
+    return category_accuracy
+
 @app.route('/predict', methods=['POST'])
 def predict():
-    data = request.json['data']
-    new_data_vectorized = vectorizer.transform([data])
-    predicted_category = model.predict(new_data_vectorized)[0]
-    predicted_category = target_names[predicted_category]
+    text = request.json['text']
 
-    response = {'predicted_category': predicted_category}
-    return jsonify(response)
+    if not text:
+         return jsonify({'error': 'Input is empty'})
     
+    # Vetorizar o texto de entrada
+    text_vectorized = vectorizer.transform([text])
+
+    # Fazer a predição
+    predicted_label = model.predict(text_vectorized)[0]
+    predicted_category = categories[predicted_label]
+
+    # Calcular a precisão para cada categoria
+    category_accuracy = calculate_category_accuracy()
+
+    result = {
+        'predicted_category': predicted_category,
+        'category_accuracy': category_accuracy[predicted_category]
+    }
+
+    return jsonify(result)
+
 if __name__ == '__main__':
     app.run()
 
